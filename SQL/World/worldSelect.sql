@@ -1,0 +1,212 @@
+--Romania orszag adatai
+select *
+from country
+where name = 'Romania';
+
+--Kontinensek
+select distinct continent 
+from country ;
+
+--Kormanyzasi formak
+select distinct government_form
+from country
+order by government_form asc;
+
+--Torpeallamok
+select name
+from country
+where surface_area < 1000;
+
+--Europai torpeallamok
+select name
+from country
+where surface_area < 1000 and continent = 'Europe';
+
+--10 Legkisebb nepessegu orszagok
+select name
+from country
+order by population asc
+limit 10;
+
+--Az USA allamelnoke
+select head_of_state
+from country
+where code = 'USA';
+
+--Antarktiszi orszagok
+select name
+from country 
+where continent = 'Antarctica';
+
+--fuggetlen orszagok
+select name, indep_year
+from country
+where indep_year is not null
+order by indep_year asc;
+
+--fuggo teruletek
+select name
+from country
+where indep_year is null;
+
+--Orszagok nepsuruseg szerint csokkeno sorrrendben
+select name, population / surface_area as population_density
+from country
+order by 2 desc;
+
+--10 legnepesebb orszag
+select name, population
+from country
+order by population desc
+limit 10;
+
+--10 legnepesebb varos
+select name, population
+from city
+order by population desc
+limit 10;
+
+--fold lakossga
+select sum(population) as foldnepesseg
+from country;
+
+--kontinensenkent hany ember van
+select continent, sum(population) as nepesseg
+from country
+group by continent
+order by nepesseg desc;
+
+--hany orszag van europaban
+select count(*)
+from country
+where continent = 'Europe';
+
+--hany nyelvet beszelnek a foldon
+select distinct language
+from country_language;
+
+--kontinensek lakossaganak atlaga
+select continent, avg(population)
+from country
+group by continent
+order by 2 desc;
+
+--legkisebb orszag terulet
+select min(surface_area)
+from country;
+
+--kontinensek terulete
+select continent, sum(surface_area)
+from country
+group by continent
+order by 2 desc;
+
+--orszagok ahol varhato elettartam kisebb mint 50 ev
+select name, life_expectancy
+from country
+where life_expectancy < 50;
+
+--kontinensek ahol az atlageletkor kisebb mint 60 ev
+select continent, avg(life_expectancy) as atlag
+from country
+group by continent
+having avg(life_expectancy) < 60;
+
+--regiok
+select distinct region
+from country
+order by region asc;
+
+--regio ahol legalabb 10 orszag van
+select region, count(name) as orszag_szam
+from country
+group by region
+having count(name) > 10
+order by region asc;
+
+--regio ahol legalabb 10 fuggetlen orszag van
+select region,count(name) as orszag_szam
+from country
+where indep_year is not null
+group by region
+having count(name) > 10
+order by region asc;
+
+--kormanyzasi formak amiben legalabb 100 millio lakos el
+select government_form, sum(population)
+from country
+group by government_form
+having sum(population) > 100000000;
+
+--korzetek ahol tobb mint 10 varos van
+select district, count(*)
+from city
+group by district
+having count(*)>10
+order by count desc;
+
+--nyelvek amiket legalabb 20 orszagban beszelnek
+select  language, count(*)
+from country_language
+group by language
+having count(*)>10
+order by 2 desc;
+
+--nyelvek amik hivatalos nyelvek az orszagban
+select  language, count(*)
+from country_language
+where is_official
+group by language
+having count(*)>5
+order by 2 desc;
+
+--torpeallamok nem europaban
+select name
+from country
+where surface_area < 1000 and continent != 'Europe';
+
+select name
+from country
+where surface_area < 1000 and continent in ('South America','Asia', 'Oceania', 'North America', 'Africa', 'Antarctica')
+
+--a vilag torpeallamainak hany %-a van Europaban
+select (
+	select cast(count(*) as numeric)
+	from country
+	where surface_area<1000 and continent ='Europe')
+	/
+	(
+	select count(*)
+	from country
+	where surface_area<1000) as szazalek;
+
+--join pelda
+select ci.name, co.name
+from city as ci
+inner join country co on ci.country_code = co.code;
+
+--orszagonkent hany varos
+select  co.name, count(ci.*) as varosok_szama
+from city ci
+	inner join country co on ci.country_code = co.code
+group by co.name
+order by 2 desc;
+
+--atlagosan hany varos van egy orszagban
+select avg (tmp.number_of_cities)
+from (
+	select co.name count(ci.*)as number_of_cities
+	from city ci
+	inner join country co on ci.country_code= co.code
+	group by co.name) as tmp;
+
+--hany magyar el a foldon
+select sum(cl.percentage * co.population) as magyar_beszelok
+from country_language cl
+	inner join country co on cl.country_code = co.code
+where language = 'Hungarian'
+
+--melyik nyelvet beszelik a legtobben a vilagon
+--Europai varosok tobb mint 1000000 lakossal
+--Beszelt nyelvek szama kontinensenkent
+--Kontinensenkent a legelterjedtebb nyelv
