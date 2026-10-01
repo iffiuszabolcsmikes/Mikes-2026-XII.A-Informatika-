@@ -167,7 +167,7 @@ where surface_area < 1000 and continent != 'Europe';
 
 select name
 from country
-where surface_area < 1000 and continent in ('South America','Asia', 'Oceania', 'North America', 'Africa', 'Antarctica')
+where surface_area < 1000 and continent in ('South America','Asia', 'Oceania', 'North America', 'Africa', 'Antarctica');
 
 --a vilag torpeallamainak hany %-a van Europaban
 select (
@@ -193,20 +193,15 @@ group by co.name
 order by 2 desc;
 
 --atlagosan hany varos van egy orszagban
-select avg (tmp.number_of_cities)
+select avg(tmp.number_of_cities)
 from (
-	select co.name count(ci.*)as number_of_cities
+	select co.name, count(ci.*) as number_of_cities
 	from city ci
-	inner join country co on ci.country_code= co.code
+		inner join country co on ci.country_code = co.code
 	group by co.name) as tmp;
 
 --hany magyar el a foldon
 select sum(cl.percentage * co.population) as magyar_beszelok
 from country_language cl
 	inner join country co on cl.country_code = co.code
-where language = 'Hungarian'
-
---melyik nyelvet beszelik a legtobben a vilagon
---Europai varosok tobb mint 1000000 lakossal
---Beszelt nyelvek szama kontinensenkent
---Kontinensenkent a legelterjedtebb nyelv
+where language = 'Hungarian';
