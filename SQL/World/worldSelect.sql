@@ -81,7 +81,7 @@ select count(*)
 from country
 where continent = 'Europe';
 
---hany nyelvet beszelnek a foldon
+--osszes nyelv
 select distinct language
 from country_language;
 
@@ -106,7 +106,7 @@ select name, life_expectancy
 from country
 where life_expectancy < 50;
 
---kontinensek ahol az atlageletkor kisebb mint 60 ev
+--kontinensek ahol a varhato elettartam atlaga kisebb mint 60 ev
 select continent, avg(life_expectancy) as atlag
 from country
 group by continent
@@ -121,7 +121,7 @@ order by region asc;
 select region, count(name) as orszag_szam
 from country
 group by region
-having count(name) > 10
+having count(name) >= 10
 order by region asc;
 
 --regio ahol legalabb 10 fuggetlen orszag van
@@ -129,7 +129,7 @@ select region,count(name) as orszag_szam
 from country
 where indep_year is not null
 group by region
-having count(name) > 10
+having count(name) >= 10
 order by region asc;
 
 --kormanyzasi formak amiben legalabb 100 millio lakos el
@@ -142,22 +142,22 @@ having sum(population) > 100000000;
 select district, count(*)
 from city
 group by district
-having count(*)>10
+having count(*) >= 10
 order by count desc;
 
 --nyelvek amiket legalabb 20 orszagban beszelnek
 select  language, count(*)
 from country_language
 group by language
-having count(*)>10
+having count(*) >= 20
 order by 2 desc;
 
---nyelvek amik hivatalos nyelvek az orszagban
+--mely nyelvek hivatalosak legalabb 5 országban
 select  language, count(*)
 from country_language
 where is_official
 group by language
-having count(*)>5
+having count(*) >= 5
 order by 2 desc;
 
 --torpeallamok nem europaban
@@ -171,7 +171,7 @@ where surface_area < 1000 and continent in ('South America','Asia', 'Oceania', '
 
 --a vilag torpeallamainak hany %-a van Europaban
 select (
-	select cast(count(*) as numeric)
+	select count(*)::numeric
 	from country
 	where surface_area<1000 and continent ='Europe')
 	/
