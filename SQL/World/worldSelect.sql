@@ -183,7 +183,7 @@ select (
 --join pelda
 select ci.name, co.name
 from city as ci
-inner join country co on ci.country_code = co.code;
+	inner join country co on ci.country_code = co.code;
 
 --orszagonkent hany varos
 select  co.name, count(ci.*) as varosok_szama
@@ -205,3 +205,75 @@ select sum(cl.percentage * co.population) as magyar_beszelok
 from country_language cl
 	inner join country co on cl.country_code = co.code
 where language = 'Hungarian';
+
+--Europai varosok tobb mint 1000000 lakossal
+select ci.name, ci.population 
+from city ci
+	inner join country co on ci.country_code=co.code
+where ci.population > 1000000 and continent = 'Europe';
+
+--Beszelt nyelvek szama kontinensenkent
+select continent, count(cl.*) as nyelvek_szama
+from country_language cl
+	inner join country cn on cl.country_code=cn.code
+group by continent
+order by 2 desc;
+
+--CTE
+
+--melyik nyelvet beszelik a legtobben a vilagon
+with nyelv_beszelok_szama as (
+	select cl.language, sum(cl.percentage*cn.population) as beszelok_szama
+	from country_language cl
+		inner join country cn on cl.country_code=cn.code
+	group by language
+)
+select language, beszelok_szama
+from nyelv_beszelok_szama
+where beszelok_szama = (
+		select max(beszelok_szama)
+		from nyelv_beszelok_szama
+	);
+
+--vagy
+
+with nyelv_beszelok_szama as (
+	select cl.language, sum(cl.percentage*cn.population) as beszelok_szama
+	from country_language cl
+		inner join country cn on cl.country_code=cn.code
+	group by language
+),
+max_beszelok as (
+	select max(beszelok_szama) legtobb
+	from nyelv_beszelok_szama
+)
+select language, beszelok_szama
+from nyelv_beszelok_szama nybsz
+	inner join max_beszelok mb on nybsz.beszelok_szama = mb.legtobb;
+
+--kontinensenkent a legelterjedtebb nyelv
+with kontinens_nyelv_beszelok_szama as (
+    select cn.continent, cl.language, sum(cl.percentage*cn.population) as beszelok_szama
+    from country_language cl
+        inner join country cn on cl.country_code=cn.code
+    group by cn.continent, language
+),
+kontinens_max_beszelok as (
+    select continent, max(beszelok_szama) as max_beszelok
+    from kontinens_nyelv_beszelok_szama
+    group by continent
+)
+select knybsz.continent, language
+from kontinens_nyelv_beszelok_szama knybsz
+	inner join kontinens_max_beszelok kmb on knybsz.beszelok_szama = kmb.max_beszelok;
+
+--orszagonkent a legnepesebb varosok
+--Legnepesebb orszag minden kontinensen
+--mely orszagok favarosa azonos a sajat nevukkel
+--atlagos orszagmeret kontinensenkent
+--legmagasabb nepsurusegu orszag
+--legalacsonyabb nepsurusegu orszag
+--A legnepesebb varos a világon es az orszag, ahol talalhato
+--Orszagok, ahol tobb mint 5 nyelvet beszelnek
+--legtobb nyelvet beszelok orszagai
+--Mely orszagokban el legalabb annyi mint a vilag nepessegenek egy szazaleka
