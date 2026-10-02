@@ -118,18 +118,18 @@ from country
 order by region asc;
 
 --regio ahol legalabb 10 orszag van
-select region, count(name) as orszag_szam
+select region, count(*) as orszag_szam
 from country
 group by region
-having count(name) >= 10
+having count(*) >= 10
 order by region asc;
 
 --regio ahol legalabb 10 fuggetlen orszag van
-select region,count(name) as orszag_szam
+select region,count(*) as orszag_szam
 from country
 where indep_year is not null
 group by region
-having count(name) >= 10
+having count(*) >= 10
 order by region asc;
 
 --kormanyzasi formak amiben legalabb 100 millio lakos el
@@ -152,7 +152,7 @@ group by language
 having count(*) >= 20
 order by 2 desc;
 
---mely nyelvek hivatalosak legalabb 5 országban
+--nyelvek amelyek legalabb 5 orszagban hivatalos nyelvek
 select  language, count(*)
 from country_language
 where is_official
@@ -164,6 +164,8 @@ order by 2 desc;
 select name
 from country
 where surface_area < 1000 and continent != 'Europe';
+
+--vagy
 
 select name
 from country
@@ -178,14 +180,14 @@ select (
 	(
 	select count(*)
 	from country
-	where surface_area<1000) as szazalek;
+	where surface_area<1000) * 100 as szazalek;
 
 --join pelda
 select ci.name, co.name
 from city as ci
 	inner join country co on ci.country_code = co.code;
 
---orszagonkent hany varos
+--orszagonkent hany varos van
 select  co.name, count(ci.*) as varosok_szama
 from city ci
 	inner join country co on ci.country_code = co.code
@@ -201,7 +203,7 @@ from (
 	group by co.name) as tmp;
 
 --hany magyar el a foldon
-select sum(cl.percentage * co.population) as magyar_beszelok
+select sum(cl.percentage * co.population / 100) as magyar_beszelok
 from country_language cl
 	inner join country co on cl.country_code = co.code
 where language = 'Hungarian';
@@ -213,7 +215,7 @@ from city ci
 where ci.population > 1000000 and continent = 'Europe';
 
 --Beszelt nyelvek szama kontinensenkent
-select continent, count(cl.*) as nyelvek_szama
+select continent, count(distinct cl.*) as nyelvek_szama
 from country_language cl
 	inner join country cn on cl.country_code=cn.code
 group by continent
@@ -223,7 +225,7 @@ order by 2 desc;
 
 --melyik nyelvet beszelik a legtobben a vilagon
 with nyelv_beszelok_szama as (
-	select cl.language, sum(cl.percentage*cn.population) as beszelok_szama
+	select cl.language, sum(cl.percentage * cn.population / 100) as beszelok_szama
 	from country_language cl
 		inner join country cn on cl.country_code=cn.code
 	group by language
@@ -238,7 +240,7 @@ where beszelok_szama = (
 --vagy
 
 with nyelv_beszelok_szama as (
-	select cl.language, sum(cl.percentage*cn.population) as beszelok_szama
+	select cl.language, sum(cl.percentage * cn.population / 100) as beszelok_szama
 	from country_language cl
 		inner join country cn on cl.country_code=cn.code
 	group by language
