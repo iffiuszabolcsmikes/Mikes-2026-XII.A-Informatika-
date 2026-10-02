@@ -221,7 +221,7 @@ from country_language cl
 group by continent
 order by 2 desc;
 
---CTE
+--CTE (Common table expression)
 
 --melyik nyelvet beszelik a legtobben a vilagon
 with nyelv_beszelok_szama as (
@@ -267,7 +267,9 @@ kontinens_max_beszelok as (
 )
 select knybsz.continent, language
 from kontinens_nyelv_beszelok_szama knybsz
-	inner join kontinens_max_beszelok kmb on knybsz.beszelok_szama = kmb.max_beszelok;
+	inner join kontinens_max_beszelok kmb
+		on	knybsz.beszelok_szama = kmb.max_beszelok
+		and	knybsz.continent = kmb.continent;
 
 --orszagonkent a legnepesebb varosok
 --Legnepesebb orszag minden kontinensen
