@@ -1,12 +1,12 @@
 --orszagok
 select *
-from country
+from country;
 
 --DISTINCT
 
 --Kontinensek
 select distinct continent 
-from country ;
+from country;
 
 --ORDER BY
 
@@ -319,9 +319,48 @@ from kontinens_nyelv_beszelok_szama knybsz
 		on	knybsz.beszelok_szama = kmb.max_beszelok
 		and	knybsz.continent = kmb.continent;
 		
---mely orszagok favarosa azonos a sajat nevukkel
---atlagos orszagmeret kontinensenkent
+--mely orszagok favarosanak neve azonos a sajat nevukkel
+select co.name
+from country co
+	inner join city ci
+		on co.code = ci.country_code
+		and  co.name = ci.name;
+		
+--mely orszagokban nincs varos
+select co.name
+from country co
+	left join city ci
+		on co.code = ci.country_code
+where ci.country_code is null;
+
+
+--atlagos orszagterulet kontinensenkent
+select continent, avg(surface_area)
+from country
+group by continent;
+
 --legmagasabb nepsurusegu orszag
+with nepsuruseg as (
+	select co.name, co.population / co.surface_area as density
+	from country co
+),
+max_nepsuruseg as (
+	select max(n.density) as max_density
+	from nepsuruseg n
+)
+select name, density
+from nepsuruseg n
+	inner join max_nepsuruseg mn on n.density = mn.max_density;
+
+--vagy
+
+select co.name, co.population / co.surface_area as density
+from country co
+where co.population / co.surface_area = (
+	select max(co.population / co.surface_area)
+	from country co
+);
+
 --legalacsonyabb nepsurusegu orszag
 --A legnepesebb varos a világon es az orszag, ahol talalhato
 --Orszagok, ahol tobb mint 5 nyelvet beszelnek
