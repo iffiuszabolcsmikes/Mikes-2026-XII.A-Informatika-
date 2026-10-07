@@ -1,16 +1,26 @@
---Romania orszag adatai
+--orszagok
 select *
 from country
-where name = 'Romania';
+
+--DISTINCT
 
 --Kontinensek
 select distinct continent 
 from country ;
 
+--ORDER BY
+
 --Kormanyzasi formak
 select distinct government_form
 from country
 order by government_form asc;
+
+--WHERE
+
+--Romania orszag adatai
+select *
+from country
+where name = 'Romania';
 
 --Torpeallamok
 select name
@@ -20,7 +30,10 @@ where surface_area < 1000;
 --Europai torpeallamok
 select name
 from country
-where surface_area < 1000 and continent = 'Europe';
+where surface_area < 1000
+	and continent = 'Europe';
+
+--LIMIT
 
 --10 Legkisebb nepessegu orszagok
 select name
@@ -66,6 +79,8 @@ from city
 order by population desc
 limit 10;
 
+--AGGREGATE FUNCTIONS
+
 --fold lakossga
 select sum(population) as foldnepesseg
 from country;
@@ -85,7 +100,7 @@ where continent = 'Europe';
 select distinct language
 from country_language;
 
---kontinensek lakossaganak atlaga
+--kontinensek nepessegenek atlaga
 select continent, avg(population)
 from country
 group by continent
@@ -105,6 +120,8 @@ order by 2 desc;
 select name, life_expectancy
 from country
 where life_expectancy < 50;
+
+--HAVING
 
 --kontinensek ahol a varhato elettartam atlaga kisebb mint 60 ev
 select continent, avg(life_expectancy) as atlag
@@ -163,24 +180,17 @@ order by 2 desc;
 --torpeallamok nem europaban
 select name
 from country
-where surface_area < 1000 and continent != 'Europe';
+where surface_area < 1000
+	and continent != 'Europe';
 
 --vagy
 
 select name
 from country
-where surface_area < 1000 and continent in ('South America','Asia', 'Oceania', 'North America', 'Africa', 'Antarctica');
+where surface_area < 1000
+	and continent in ('South America','Asia', 'Oceania', 'North America', 'Africa', 'Antarctica');
 
---a vilag torpeallamainak hany %-a van Europaban
-select (
-	select count(*)::numeric
-	from country
-	where surface_area<1000 and continent ='Europe')
-	/
-	(
-	select count(*)
-	from country
-	where surface_area<1000) * 100 as szazalek;
+--JOIN
 
 --join pelda
 select ci.name, co.name
@@ -193,14 +203,6 @@ from city ci
 	inner join country co on ci.country_code = co.code
 group by co.name
 order by 2 desc;
-
---atlagosan hany varos van egy orszagban
-select avg(tmp.number_of_cities)
-from (
-	select co.name, count(ci.*) as number_of_cities
-	from city ci
-		inner join country co on ci.country_code = co.code
-	group by co.name) as tmp;
 
 --hany magyar el a foldon
 select sum(cl.percentage * co.population / 100) as magyar_beszelok
@@ -221,7 +223,53 @@ from country_language cl
 group by continent
 order by 2 desc;
 
+--SUBSELECT
+
+--atlagosan hany varos van egy orszagban
+select avg(tmp.number_of_cities)
+from (
+	select co.name, count(ci.*) as number_of_cities
+	from city ci
+		inner join country co on ci.country_code = co.code
+	group by co.name) as tmp;
+
+--a vilag torpeallamainak hany %-a van Europaban
+select (
+		select count(*)::numeric
+		from country
+		where surface_area < 1000 and continent = 'Europe'
+	)
+	/
+	(
+		select count(*)
+		from country
+		where surface_area < 1000
+	) * 100 as szazalek;
+
 --CTE (Common table expression)
+
+--orszagonkent a legnepesebb varosok
+with max_varos as (
+	select country_code, max(population) maxpop
+	from city ci
+	group by country_code
+)
+select co.name, ci.name, mv.maxpop
+from city ci
+	inner join max_varos mv on ci.population = mv.maxpop
+	inner join country co on ci.country_code = co.code;
+	
+--legnepesebb orszag minden kontinensen
+with max_orszag as(
+	select continent, max(population) maxpop
+	from country
+	group by continent
+)
+select c.continent, name, population
+from country c
+	inner join max_orszag mo
+		on mo.maxpop = c.population
+		and c.continent = mo.continent;
 
 --melyik nyelvet beszelik a legtobben a vilagon
 with nyelv_beszelok_szama as (
@@ -270,9 +318,7 @@ from kontinens_nyelv_beszelok_szama knybsz
 	inner join kontinens_max_beszelok kmb
 		on	knybsz.beszelok_szama = kmb.max_beszelok
 		and	knybsz.continent = kmb.continent;
-
---orszagonkent a legnepesebb varosok
---Legnepesebb orszag minden kontinensen
+		
 --mely orszagok favarosa azonos a sajat nevukkel
 --atlagos orszagmeret kontinensenkent
 --legmagasabb nepsurusegu orszag
