@@ -362,7 +362,53 @@ where co.population / co.surface_area = (
 );
 
 --legalacsonyabb nepsurusegu orszag
+
 --A legnepesebb varos a világon es az orszag, ahol talalhato
---Orszagok, ahol tobb mint 5 nyelvet beszelnek
---legtobb nyelvet beszelok orszagai
+select co.name, ci.name, ci.population
+from city ci
+	inner join country co on co.code = ci.country_code
+where ci.population = (
+	select max(population)
+	from city
+);
+
+--orszagok ahol legalabb 5 nyelvet beszelnek
+select co.name, count(cl.*) as nyelvek_szama
+from country_language cl
+	inner join country co on cl.country_code = co.code
+group by co.name
+having count(cl.*) >= 5
+order by 2 desc;
+
+--legtobb nyelvet beszelo orszagok
+select co.name, count(cl.*) nyelvek_szama
+from country_language cl
+	inner join country co on cl.country_code = co.code
+group by co.name
+having count(cl.*) = (
+	select max(nyelvek_szama)
+	from (
+		select count(*) nyelvek_szama
+		from country_language cl
+		group by country_code
+	)
+);
+
+--vagy
+
+with orszagok_nyelveinek_szama as (
+	select country_code, count(*) nyelvek_szama
+	from country_language cl
+	group by country_code
+),
+orszagok_maxnyelvszam as (
+	select max(nyelvek_szama) max_szam
+	from orszagok_nyelveinek_szama
+)
+select co.name, onysz.nyelvek_szama
+from orszagok_nyelveinek_szama onysz
+	inner join orszagok_maxnyelvszam om on om.max_szam = onysz.nyelvek_szama
+	inner join country co on co.code = onysz.country_code
+
+
 --Mely orszagokban el legalabb annyi mint a vilag nepessegenek egy szazaleka
