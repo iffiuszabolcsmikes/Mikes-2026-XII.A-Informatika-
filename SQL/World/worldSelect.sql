@@ -153,14 +153,14 @@ order by region asc;
 select government_form, sum(population)
 from country
 group by government_form
-having sum(population) > 100000000;
+having sum(population) >= 100000000;
 
---korzetek ahol tobb mint 10 varos van
+--korzetek ahol legalabb 10 varos van
 select district, count(*)
 from city
 group by district
 having count(*) >= 10
-order by count desc;
+order by 2 desc;
 
 --nyelvek amiket legalabb 20 orszagban beszelnek
 select  language, count(*)
@@ -199,8 +199,8 @@ from city as ci
 
 --orszagonkent hany varos van
 select  co.name, count(ci.*) as varosok_szama
-from city ci
-	inner join country co on ci.country_code = co.code
+from country co
+	left join city ci on ci.country_code = co.code
 group by co.name
 order by 2 desc;
 
@@ -217,7 +217,7 @@ from city ci
 where ci.population > 1000000 and continent = 'Europe';
 
 --Beszelt nyelvek szama kontinensenkent
-select continent, count(distinct cl.*) as nyelvek_szama
+select continent, count(distinct cl.language) as nyelvek_szama
 from country_language cl
 	inner join country cn on cl.country_code=cn.code
 group by continent
@@ -226,12 +226,14 @@ order by 2 desc;
 --SUBSELECT
 
 --atlagosan hany varos van egy orszagban
-select avg(tmp.number_of_cities)
+select avg(tmp.number_of_cities) as atlagos_varossz
 from (
-	select co.name, count(ci.*) as number_of_cities
-	from city ci
-		inner join country co on ci.country_code = co.code
-	group by co.name) as tmp;
+    select co.code, count(ci.id) as number_of_cities
+    from country co
+    left join city ci
+        on ci.country_code = co.code
+    group by co.code
+) as tmp;
 
 --a vilag torpeallamainak hany %-a van Europaban
 select (
@@ -256,7 +258,9 @@ with max_varos as (
 )
 select co.name, ci.name, mv.maxpop
 from city ci
-	inner join max_varos mv on ci.population = mv.maxpop
+	inner join max_varos mv
+		on ci.country_code = mv.country_code
+		and ci.population = mv.maxpop
 	inner join country co on ci.country_code = co.code;
 	
 --legnepesebb orszag minden kontinensen
@@ -303,7 +307,7 @@ from nyelv_beszelok_szama nybsz
 
 --kontinensenkent a legelterjedtebb nyelv
 with kontinens_nyelv_beszelok_szama as (
-    select cn.continent, cl.language, sum(cl.percentage*cn.population) as beszelok_szama
+    select cn.continent, cl.language, sum(cl.percentage * cn.population) / 100 as beszelok_szama
     from country_language cl
         inner join country cn on cl.country_code=cn.code
     group by cn.continent, language
@@ -323,7 +327,7 @@ from kontinens_nyelv_beszelok_szama knybsz
 select co.name
 from country co
 	inner join city ci
-		on co.code = ci.country_code
+		on co.capital = ci.id
 		and  co.name = ci.name;
 		
 --mely orszagokban nincs varos
@@ -341,7 +345,7 @@ group by continent;
 
 --legmagasabb nepsurusegu orszag
 with nepsuruseg as (
-	select co.name, co.population / co.surface_area as density
+	select co.name, co.population::numeric / nullif(co.surface_area, 0) as density
 	from country co
 ),
 max_nepsuruseg as (
@@ -362,6 +366,12 @@ where co.population / co.surface_area = (
 );
 
 --legalacsonyabb nepsurusegu orszag
+select co.name, co.population / co.surface_area as density
+from country co
+where co.population / co.surface_area = (
+	select min(co.population / co.surface_area)
+	from country co
+);
 
 --A legnepesebb varos a világon es az orszag, ahol talalhato
 select co.name, ci.name, ci.population
@@ -391,7 +401,7 @@ having count(cl.*) = (
 		select count(*) nyelvek_szama
 		from country_language cl
 		group by country_code
-	)
+	) as tmp
 );
 
 --vagy
@@ -408,7 +418,37 @@ orszagok_maxnyelvszam as (
 select co.name, onysz.nyelvek_szama
 from orszagok_nyelveinek_szama onysz
 	inner join orszagok_maxnyelvszam om on om.max_szam = onysz.nyelvek_szama
-	inner join country co on co.code = onysz.country_code
+	inner join country co on co.code = onysz.country_code;
 
 
 --Mely orszagokban el legalabb annyi mint a vilag nepessegenek egy szazaleka
+select name, population
+from country
+where population >= (
+	select sum(population) / 100.0
+	from country
+)
+order by 2 desc;
+
+--fovarosok
+select co.name, ci.name
+from city ci
+	inner join country co on co.capital = ci.id;
+
+--azok a varosok melyeknek van helyi neve
+select name, local_name
+from city
+where local_name is not null;
+
+--orszagok es hivatalos nyelveinek szama
+with hivatalos_nyelvszamok as (
+	select country_code, count(*) szam
+	from country_language
+	where is_official is true
+	group by country_code
+)
+select co.name, coalesce(h.szam, 0)
+from country co
+	left join hivatalos_nyelvszamok h on h.country_code = co.code
+order by 2 desc;
+
