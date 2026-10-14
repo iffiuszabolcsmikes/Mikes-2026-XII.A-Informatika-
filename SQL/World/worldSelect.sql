@@ -33,6 +33,26 @@ from country
 where surface_area < 1000
 	and continent = 'Europe';
 
+--Milyen orszagok vegzodzodese 'istan'
+select name
+from country
+where name like '%istan';
+
+--Milyen orszagok vegzodzodese 'ia'
+select name
+from country
+where name like '%ia';
+
+--Milyen orszagok neve tartalmazza az 'island'
+select name
+from country
+where name ilike '%island%';
+
+--kisvarosok (lakossag kisebb mint 10000)
+select name, population
+from city
+where population < 10000;
+
 --LIMIT
 
 --10 Legkisebb nepessegu orszagok
@@ -224,6 +244,14 @@ group by continent
 order by 2 desc;
 
 --SUBSELECT
+
+--melyik a legkisebb nepessegu varos a vilagon
+select name
+from city
+where population = (
+	select min(population)
+	from city
+);
 
 --atlagosan hany varos van egy orszagban
 select avg(tmp.number_of_cities) as atlagos_varossz
