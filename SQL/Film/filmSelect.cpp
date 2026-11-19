@@ -1,3 +1,4 @@
+--filmek amikben Kate es Leo is szerepel
 select f.cim
 from film f
 	inner join film_szinesz as fsz on f.id = fsz.film_id
@@ -12,6 +13,7 @@ from film f
 	inner join szinesz as sz on sz.id=fsz.szinesz_id
 where sz.nev = 'Leonardo DiCaprio'
 
+--filmek amelyekben egy szinesz tobb szerepet is jatszik
 select f.cim, sz.nev, count(szerep)
 from film f
 	inner join film_szinesz as fsz on f.id = fsz.film_id
